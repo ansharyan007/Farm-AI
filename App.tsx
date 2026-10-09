@@ -5,6 +5,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchCamera, launchImageLibrary, Asset} from 'react-native-image-picker';
+import RealScan from './screens/RealScan';
 
 const c={ink:'#14352B',muted:'#6B7F76',cream:'#F7F8F2',green:'#1D6B4F',mint:'#DCEEE4',lime:'#B8E36E',line:'#E5EAE3',white:'#FFF',amber:'#A56A09'};
 const Pill=({children,amber=false}:{children:React.ReactNode;amber?:boolean})=><View style={[s.pill,{backgroundColor:amber?'#FFF2D5':c.mint}]}><Text style={[s.pillText,{color:amber?c.amber:c.green}]}>{children}</Text></View>;
