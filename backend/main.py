@@ -30,13 +30,16 @@ def startup(): load_model()
 def health(): return {"ok": True, "model_loaded": model is not None, "device": device, "supported_crops": sorted(SUPPORTED_CROPS)}
 
 @app.post("/predict")
-async def predict(image: UploadFile = File(...), crop: str = Form(...)):
+async def predict(image: UploadFile = File(...), crop: str = Form("auto")):
     crop = crop.lower().strip()
-    if crop not in SUPPORTED_CROPS: raise HTTPException(400, f"Crop must be one of: {', '.join(sorted(SUPPORTED_CROPS))}")
+    if crop != "auto" and crop not in SUPPORTED_CROPS: raise HTTPException(400, f"Crop must be one of: {', '.join(sorted(SUPPORTED_CROPS))} or auto")
     if model is None: raise HTTPException(503, "Model is not trained or not mounted. Run ml/train.py first.")
     try: content = await image.read(); tensor = preprocess(Image.open(io.BytesIO(content)).convert("RGB")).unsqueeze(0).to(device)
     except Exception as exc: raise HTTPException(400, f"Invalid image: {exc}")
     with torch.no_grad(): probs = torch.softmax(model(tensor), dim=1)[0]
     score, index = probs.max(0); label = classes[index.item()]
+    detected_crop = "tomato" if label.startswith("Tomato") else "potato" if label.startswith("Potato") else "maize" if label.startswith("Corn") else "unknown"
+    if crop == "auto": crop = detected_crop
+    if detected_crop == "unknown" or (crop != detected_crop): score = score * 0.5
     confidence = float(score.item()); uncertain = confidence < 0.70
-    return {"crop": crop, "prediction": "uncertain" if uncertain else label, "confidence": round(confidence, 4), "uncertain": uncertain, "disclaimer": "This is decision support, not a definitive agronomic diagnosis."}
+    return {"crop": crop, "detected_crop": detected_crop, "prediction": "uncertain" if uncertain else label, "confidence": round(confidence, 4), "uncertain": uncertain, "disclaimer": "This is decision support only; consult an agronomist."}

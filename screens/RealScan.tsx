@@ -18,7 +18,7 @@ export default function RealScan() {
     try {
       const body = new FormData();
       body.append('image', {uri: asset.uri, type: asset.type || 'image/jpeg', name: asset.fileName || 'leaf.jpg'} as any);
-      body.append('crop', crop);
+      body.append('crop', 'auto');
       const response = await fetch(`${API_URL}/predict`, {method: 'POST', body});
       if (!response.ok) throw new Error(await response.text());
       setResult(await response.json());
