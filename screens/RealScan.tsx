@@ -3,11 +3,9 @@ import {Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpaci
 import {Asset, launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 const API_URL = 'http://10.0.2.2:8000';
-const CROPS = ['tomato', 'potato', 'maize'];
 const pretty = (value: string) => value.replace(/^(Tomato|Potato|Corn_\(maize\))___/, '').replaceAll('_', ' ').replace(/\s+/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
 
 export default function RealScan() {
-  const [crop, setCrop] = useState('tomato');
   const [photo, setPhoto] = useState<Asset>();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>();
@@ -30,8 +28,7 @@ export default function RealScan() {
   async function choosePhoto() { const response = await launchImageLibrary({mediaType: 'photo', selectionLimit: 1, quality: 0.8}); if (!response.didCancel) predict(response.assets?.[0]); }
 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
-    <Text style={styles.kicker}>FARM AI / REAL INFERENCE</Text><Text style={styles.title}>Plant doctor</Text><Text style={styles.subtitle}>Choose a crop, then upload a clear leaf photo.</Text>
-    <Text style={styles.label}>WHAT ARE YOU CHECKING?</Text><View style={styles.cropRow}>{CROPS.map(item => <TouchableOpacity key={item} onPress={() => {setCrop(item); setResult(undefined);}} style={[styles.crop, crop === item && styles.cropActive]}><Text style={[styles.cropText, crop === item && styles.cropTextActive]}>{item[0].toUpperCase() + item.slice(1)}</Text></TouchableOpacity>)}</View>
+    <Text style={styles.kicker}>FARM AI / REAL INFERENCE</Text><Text style={styles.title}>Plant doctor</Text><Text style={styles.subtitle}>Upload a clear leaf photo. Farm AI detects the crop from the image.</Text>
     <View style={styles.frame}>{photo?.uri ? <Image source={{uri: photo.uri}} resizeMode="cover" style={styles.photo}/> : <><Text style={styles.camera}>📷</Text><Text style={styles.hint}>Your leaf photo appears here</Text></>}</View>
     {busy && <Text style={styles.status}>Running the trained CNN…</Text>}
     {result && <View style={styles.result}><Text style={styles.resultLabel}>{result.uncertain ? 'NEEDS REVIEW' : 'MODEL RESULT'}</Text><Text style={styles.resultTitle}>{result.uncertain ? 'Uncertain prediction' : pretty(result.prediction)}</Text><Text style={styles.confidence}>{Math.round(result.confidence * 100)}% confidence</Text><Text style={styles.disclaimer}>{result.disclaimer}</Text></View>}
