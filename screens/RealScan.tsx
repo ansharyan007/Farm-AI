@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Alert, AppState, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Asset, launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 const API_URL = 'http://10.0.2.2:8000';
@@ -9,6 +9,7 @@ export default function RealScan() {
   const [photo, setPhoto] = useState<Asset>();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>();
+  useEffect(() => { const sub = AppState.addEventListener('change', state => { if (state === 'active') { setPhoto(undefined); setResult(undefined); } }); return () => sub.remove(); }, []);
 
   async function predict(asset?: Asset) {
     if (!asset?.uri) return;
@@ -31,7 +32,7 @@ export default function RealScan() {
     <Text style={styles.kicker}>FARM AI / REAL INFERENCE</Text><Text style={styles.title}>Plant doctor</Text><Text style={styles.subtitle}>Upload a clear leaf photo. Farm AI detects the crop from the image.</Text>
     <View style={styles.frame}>{photo?.uri ? <Image source={{uri: photo.uri}} resizeMode="cover" style={styles.photo}/> : <><Text style={styles.camera}>📷</Text><Text style={styles.hint}>Your leaf photo appears here</Text></>}</View>
     {busy && <Text style={styles.status}>Running the trained CNN…</Text>}
-    {result && <View style={styles.result}><Text style={styles.resultLabel}>{result.uncertain ? 'NEEDS REVIEW' : 'MODEL RESULT'}</Text><Text style={styles.resultTitle}>{result.uncertain ? 'Uncertain prediction' : pretty(result.prediction)}</Text><Text style={styles.detected}>Detected crop: {result.detected_crop ? result.detected_crop[0].toUpperCase() + result.detected_crop.slice(1) : 'Unknown'}</Text><Text style={styles.confidence}>{Math.round(result.confidence * 100)}% confidence</Text><Text style={styles.disclaimer}>{result.disclaimer}</Text></View>}
+    {result && photo?.uri && <View style={styles.result}><Text style={styles.resultLabel}>{result.uncertain ? 'NEEDS REVIEW' : 'MODEL RESULT'}</Text><Text style={styles.resultTitle}>{result.uncertain ? 'Uncertain prediction' : pretty(result.prediction)}</Text><Text style={styles.detected}>Detected crop: {result.detected_crop ? result.detected_crop[0].toUpperCase() + result.detected_crop.slice(1) : 'Unknown'}</Text><Text style={styles.confidence}>{Math.round(result.confidence * 100)}% confidence</Text><Text style={styles.disclaimer}>{result.disclaimer}</Text></View>}
     <TouchableOpacity style={styles.primary} onPress={takePhoto} disabled={busy}><Text style={styles.primaryText}>{busy ? 'Analyzing…' : 'Take photo'}</Text></TouchableOpacity><TouchableOpacity onPress={choosePhoto} disabled={busy}><Text style={styles.secondary}>Choose from gallery</Text></TouchableOpacity>
   </ScrollView></SafeAreaView>;
 }
